@@ -2,12 +2,9 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <iostream>
-#include <mutex>
 #include <optional>
 #include <thread>
-#include <vector>
 
 template <typename T> class SPSC {
   public:
@@ -15,6 +12,7 @@ template <typename T> class SPSC {
     bool enqueue(T val) {
         size_t tail = m_tail.load(std::memory_order_relaxed);
         size_t nxt = (tail + 1) % m_cap;
+        // Queue is full
         if (nxt == m_head) {
             return false;
         }
@@ -27,8 +25,8 @@ template <typename T> class SPSC {
     /*Dequeue can only modify m_head*/
     std::optional<T> dequeue() {
         size_t head = m_head.load(std::memory_order_relaxed);
-
-        // Queue is empty
+        
+        //Queue is empty
         if (head == m_tail.load(std::memory_order_relaxed)) {
             return std::nullopt;
         }
