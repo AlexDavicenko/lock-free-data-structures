@@ -29,13 +29,14 @@ template <typename T> class Stack {
                     return std::nullopt;
                 }
 
-                m_hazard_manager.mark_as_hazard(top);
+                m_hazard_manager.mark_hazard(top);
             } while (top != m_top.load(std::memory_order_acquire));
 
         } while (!m_top.compare_exchange_weak(top, top->next, std::memory_order_release, std::memory_order_acquire));
         m_size.fetch_sub(1);
         T ret = top->data;
         m_hazard_manager.retire(top);
+        m_hazard_manager.unmark_hazard();
         return ret;
     }
     static Stack<T> create(size_t max_thread) {
